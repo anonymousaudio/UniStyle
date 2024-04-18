@@ -46,567 +46,744 @@
       <li><a href="#caption">Automatic speaking style captioning</a></li>
       <li><a href="#synthesis1">Zero-shot stylistic speech synthesis with prompt speech control</a></li>
       <li><a href="#synthesis2">Zero-shot stylistic speech synthesis with text description control</a></li>
-      <li><a href="#synthesis3">Discussion - Attribute Control</a></li>
+      <li><a href="#synthesis3">Discussion - attribute control</a></li>
       </li>
 
     </ol>
 
-    <!-- <br><br>
+    <br><br>
     <h2 id="abstract">1. Abstract<a name="abstract"></a></h2>
-    <p> Style voice conversion aims to transform the speaking style of source speech into a desired style and keep the
-      original speaker's identity. However, current style voice conversion approaches either simultaneously convert
-      speaking style and speaker timbre or focus solely on speaker timbre, limiting their practical applications.
-      In this study, we present ZSVC, a novel Zero-shot Style Voice Conversion approach that utilizes a speech codec and
-      a latent diffusion model with speech prompting mechanism to achieve in-context learning for speaking style
-      conversion.
-      To disentangle speaking style and speaker timbre, we introduce information bottleneck to filter speaking style in
-      the source speech and employ Uncertainty Modeling Adaptive Instance Normalization (UMAdaIN) to perturb the speaker
-      timbre in the style prompt.
-      Moreover, we propose a novel adversarial training strategy to enhance in-context learning and improve style
-      similarity.
-      Experiments on 44,000 hours of speech underscore ZSVC's superiority in generating speech with diverse speaking
-      styles in zero-shot scenarios.
-    </p> -->
-    <!-- <center><img src='fig/ssl0102_00.jpg' width="50%"><img src='fig/zsvc_overview.drawio.png' width="40%"></center> -->
+    <p> Understanding the speaking style, such as the emotion of the interlocutor's speech, and responding with speech
+      in an appropriate style is a natural occurrence in human conversations. However, technically, existing research on
+      speech synthesis and speaking style captioning typically proceeds independently. In this work, an innovative
+      framework, referred to as UniStyle, is proposed to incorporate both the capabilities of speaking style captioning
+      and style-controllable speech synthesizing. Specifically, UniStyle consists of a UniConnector and a style
+      prompt-based speech generator. The role of the UniConnector is to bridge the gap between different modalities,
+      namely speech audio and text descriptions. It enables the generation of text descriptions with speech as input and
+      the creation of style representations from text descriptions for speech synthesis with the speech generator.
+      Besides, to overcome the issue of data scarcity, we propose a two-stage and semi-supervised training strategy,
+      which reduces data requirements while boosting performance. Extensive experiments conducted on open-source corpora
+      demonstrate that UniStyle achieves state-of-the-art performance in speaking style captioning and synthesizes
+      expressive speech with various speaker timbres and speaking styles in a zero-shot manner.
+    </p>
 
-    <!-- <div class="image-container">
-      <div class="image-box">
-        <img src="fig/zsvc_overview.drawio.png" width="30%" alt="描述图片的文字1">
-        <p>Figure 1: Overall framework of the proposed method. 'IC' means in-context learning through speech prompting
-          mechanism.</p>
-      </div>
-    </div>
+
     <div class="image-container">
       <div class="image-box">
-        <img src="fig/zsvc_details.drawio.png" width="60%" alt="描述图片的文字1">
-        <p>Figure 2: The detailed architecture of proposed ZSVC. The dashed line means only available in training.</p>
+        <img src="fig/UniStyle.png" width="60%" alt="Overview of the proposed UniStyle">
+        <p>Figure 1: Overview of the proposed UniStyle</p>
       </div>
-    </div> -->
-    <!-- <div class="image-box">
-        <img src="fig/zsvc_details.drawio.png" width="100%" alt="描述图片的文字2">
-        <p>The detailed architecture of proposed ZSVC. The dashed line means only available in training.</p>
-      </div>
-    </div> -->
-    <!-- <br><br> -->
-
-
-    <!-- <h2>2. Demos -- zero-shot style voice for arbitrary speakers<a name="prediction"></a></h2> -->
-    <!-- <h3>Convert the emotion and style expresssions from different source speakers to the neutral target speakers without
-      emotional and stylistic training data.</h3> -->
-
-    <!-- <p><b>Part 1. Source speech</b><audio src="samples/source speech/norm_denoised_0.wav" controls="" preload=""
-        ></audio></p>
-
-    <table>
+    </div>
+    <br><br>
+    <h2>2. Automatic speaking style captioning<a name="caption"></a></h2>
+    <h3>We conduct automatic speaking style captioning that generates style captions for speech inputs. The following
+      captions are generated by StyleCap, SECap and UniStyle-L, respectively.</h3>
+    <table class="tg">
       <thead>
         <tr>
-          <th style="text-align: center"><strong>Style prompt</strong></th>
-          <th style="text-align: center"><strong>LGVC</strong></th>
-          <th style="text-align: center"><strong>StyleVC</strong></th>
-          <th style="text-align: center"><strong>ZSVC</strong></th>
+          <th class="tg-0lax">Input Speech</th>
+          <th class="tg-0lax">StyleCap</th>
+          <th class="tg-0lax">SECap</th>
+          <th class="tg-0lax">UniStyle-L</th>
+          <th class="tg-0lax">GT</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/0_0_6.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_0_0_0_6.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_0_0_0_6.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_0_0_0_6.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/2_2_42.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_0_2_2_42.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_0_2_2_42.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_0_2_2_42.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/8_0_10.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_0_8_0_10.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_0_8_0_10.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_0_8_0_10.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/F-sad_0015_001063.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_0_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_0_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_0_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/anger_309-336_0332.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_0_anger_309-336_0332.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
           <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_0_anger_309-336_0332.wav_0.wav" controls=""
+              src="samples/speaking style captioning/input speech/MEAD-W028-audio-happy-level_2-020.wav" controls=""
+              preload=""></audio>
+          <td class="tg-0lax">With a stume at the wrong fives. She spoke slowly, her livid high-pitched voice
+            resonating with energy. The startled dumbfounded girl's speech was slow and deliberate, yet full of life
+          </td>
+          <td class="tg-0lax">With a normal pitch, the joyful man speaks at a leisurely pace, exuding low energy.</td>
+          <td class="tg-0lax">slowly and emphatically, the woman's high-energy speech held the attention of her happy
+            audience.</td>
+          <td class="tg-0lax">The joyful woman's high-pitched voice carried a slow yet energetic speech.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio
+              src="samples/speaking style captioning/input speech/3830_12535_000033_000002.wav" controls=""
+              preload=""></audio>
+          <td class="tg-0lax">The man with a deep-speffo. A talks in a regular rhythm, speaking at an average pace and
+            displaying normal energy. It's important to maintain a healthy sense of speed while conveying the essence
+            of</td>
+          <td class="tg-0lax">The man's low-pitched tone conveys high energy while speaking naturally at a moderate
+            speed.</td>
+          <td class="tg-0lax">with a low pitch and customary speaking speed, the man's overall energy level appears
+            subdued.</td>
+          <td class="tg-0lax">The man's low-pitched voice maintains an even speaking tempo, evoking a subdued vitality.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio
+              src="samples/speaking style captioning/input speech/MEAD-W018-audio-sad-level_1-028.wav" controls=""
+              preload=""></audio>
+          <td class="tg-0lax">A fuming suivaiucal quasiwaura was at a normal. The woman spoke slowly, her revulsed
+            voice carrying a high pitch and low energy. The dismissive girl's words were like a gentle breeze</td>
+          <td class="tg-0lax">With a high-pitched voice, the male speaker's unhurried speech conveys low energy.
+            Speaking speed.</td>
+          <td class="tg-0lax">despite the low energy, her heartbroken voice sustains a high pitch at a normal pace.
+          </td>
+          <td class="tg-0lax">She talks gently, yet her downcast pitch is high.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/speaking style captioning/input speech/p245_312.wav"
+              controls="" preload=""></audio>
+          <td class="tg-0lax">The man with a deep-speffims to speak in. His customary rush, delivers words with low
+            energy at normal pitch and pace. It's not easy being a guy, as society tends to place high expectations
+          </td>
+          <td class="tg-0lax">The man's low-pitched voice and standard speaking tempo contribute to his subdued
+            energy.</td>
+          <td class="tg-0lax">the male speaker's low - pitched voice delivers his message with a moderate level of
+            energy and a standard speed of speech.</td>
+          <td class="tg-0lax">The male speaker's low-pitched tone communicates naturally, neither too fast nor too slow,
+            with moderate energy.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <br><br>
+
+    <h2>3. Zero-shot stylistic speech synthesis with prompt speech control<a name="synthesis1"></a></h2>
+    <h3>We conduct zero-shot text-to-speech that synthesizes the speech with not only the timbre of a speaker prompt but
+      also the speaking style of a style prompt.</h3>
+
+
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align: center"><strong>Speaker prompt</strong></th>
+          <th style="text-align: center"><strong>Style prompt</strong></th>
+          <th style="text-align: center"><strong>SC VALL-E</strong></th>
+          <th style="text-align: center"><strong>Vec-Tok Speech</strong></th>
+          <th style="text-align: center"><strong>UniStyle-P</strong></th>
+          <th style="text-align: center"><strong>UniStyle</strong></th>
+          <th style="text-align: center"><strong>UniStyle-L</strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="text-align: left" colspan=7>Text: Receiving this unexpected good news, I can hardly believe it.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/prompt speech control/speaker prompt/male.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_0_anger_309-336_0332.wav_0.wav"
+          <td style="text-align: left"><audio src="samples/prompt speech control/style prompt/style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/sc valle/male_style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/vec-tok/male_style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-P/male_style1.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle/male_style1.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-L/male_style1.wav" controls=""
+              preload=""></audio>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left" colspan=7>Text: Being alone often fills me with a deep sense of loneliness and
+            helplessness.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/prompt speech control/speaker prompt/male.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/style prompt/style2.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/sc valle/male_style2.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/vec-tok/male_style2.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-P/male_style2.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle/male_style2.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-L/male_style2.wav" controls=""
+              preload=""></audio>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left" colspan=7>Text: I feel angry and helpless witnessing such blatant disregard for
+            the environment.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/prompt speech control/speaker prompt/male.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/style prompt/style3.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/sc valle/male_style3.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/vec-tok/male_style3.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-P/male_style3.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle/male_style3.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-L/male_style3.wav" controls=""
+              preload=""></audio>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left" colspan=7>Text: Losing my beloved pet feels like my heart is being torn apart.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/prompt speech control/speaker prompt/male.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/style prompt/style4.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/sc valle/male_style4.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/vec-tok/male_style4.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-P/male_style4.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle/male_style4.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-L/male_style4.wav" controls=""
+              preload=""></audio>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left" colspan=7>Text: Receiving this unexpected good news, I can hardly believe it.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/prompt speech control/speaker prompt/female.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/style prompt/style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/sc valle/female_style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/vec-tok/female_style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-P/female_style1.wav"
+              controls="" preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle/female_style1.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-L/female_style1.wav"
               controls="" preload=""></audio>
           </td>
         </tr>
         <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/sleepiness_477-504_0479.wav" controls=""
+          <td style="text-align: left" colspan=7>Text: Being alone often fills me with a deep sense of loneliness and
+            helplessness.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/prompt speech control/speaker prompt/female.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_gst/norm_denoised_0_sleepiness_477-504_0479.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/prompt speech control/style prompt/style2.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_0_sleepiness_477-504_0479.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/prompt speech control/sc valle/female_style2.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio
-              src="samples/propose_zsvc/norm_denoised_0_sleepiness_477-504_0479.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/prompt speech control/vec-tok/female_style2.wav" controls=""
               preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-P/female_style2.wav"
+              controls="" preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle/female_style2.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-L/female_style2.wav"
+              controls="" preload=""></audio>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left" colspan=7>Text: I feel angry and helpless witnessing such blatant disregard for
+            the environment.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/prompt speech control/speaker prompt/female.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/style prompt/style3.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/sc valle/female_style3.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/vec-tok/female_style3.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-P/female_style3.wav"
+              controls="" preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle/female_style3.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-L/female_style3.wav"
+              controls="" preload=""></audio>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left" colspan=7>Text: Losing my beloved pet feels like my heart is being torn apart.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/prompt speech control/speaker prompt/female.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/style prompt/style4.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/sc valle/female_style4.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/vec-tok/female_style4.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-P/female_style4.wav"
+              controls="" preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle/female_style4.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/prompt speech control/UniStyle-L/female_style4.wav"
+              controls="" preload=""></audio>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <p><b>Part 2. Source speech</b><audio src="samples/source speech/norm_denoised_11.wav" controls=""
-        preload=""></audio></p>
+    <h2>4. Zero-shot stylistic speech synthesis with text description control<a name="synthesis2"></a></h2>
+    <h3>We conduct zero-shot text-to-speech that synthesizes the speech with the timbre of a speaker prompt, while the
+      speaking style is controlled by text descriptions. We synthesize the same text "I am very busy, Cornelia, and
+      Colonel Bethel is waiting; I will talk to you at dinner time." for a more intuitive comparison.</h3>
+
     <table>
       <thead>
         <tr>
-          <th style="text-align: center"><strong>Style prompt</strong></th>
-          <th style="text-align: center"><strong>LGVC</strong></th>
-          <th style="text-align: center"><strong>StyleVC</strong></th>
-          <th style="text-align: center"><strong>ZSVC</strong></th>
+          <th style="text-align: center"><strong>Speaker prompt</strong></th>
+          <th style="text-align: center"><strong>PromptStyle</strong></th>
+          <th style="text-align: center"><strong>Salle</strong></th>
+          <th style="text-align: center"><strong>UniStyle-P</strong></th>
+          <th style="text-align: center"><strong>UniStyle</strong></th>
+          <th style="text-align: center"><strong>UniStyle-L</strong></th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/0_0_6.wav" controls="" preload=""></audio>
+          <td style="text-align: left" colspan=6>Text description: A man with an energetic, high-pitched voice speaks
+            fast.
           </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_11_0_0_6.wav_0.wav" controls=""
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/text description control/speaker prompt/male.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_11_0_0_6.wav_0.wav"
+          <td style="text-align: left"><audio src="samples/text description control/PromptStyle/male_style1.wav"
               controls="" preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_11_0_0_6.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/text description control/Salle/male_style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-P/male.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle/male_style1.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-L/male_style1.wav" controls=""
               preload=""></audio>
           </td>
         </tr>
         <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/2_2_42.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_11_2_2_42.wav_0.wav" controls=""
+          <td style="text-align: left" colspan=6>Text description: He communicated in a reserved tone, his sad speech
+            unfolding slowly and softly.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/text description control/speaker prompt/male.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_11_2_2_42.wav_0.wav"
+          <td style="text-align: left"><audio src="samples/text description control/PromptStyle/male_style2.wav"
               controls="" preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_11_2_2_42.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/text description control/Salle/male_style2.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-P/male.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle/male_style2.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-L/male_style2.wav" controls=""
               preload=""></audio>
           </td>
         </tr>
         <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/8_0_10.wav" controls="" preload=""></audio>
+          <td style="text-align: left" colspan=6>Text description: With a low-pitched tone, the male speaker's fast
+            speech emanates vibrant energy.
           </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_11_8_0_10.wav_0.wav" controls=""
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/text description control/speaker prompt/male.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_11_8_0_10.wav_0.wav"
+          <td style="text-align: left"><audio src="samples/text description control/PromptStyle/male_style3.wav"
               controls="" preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_11_8_0_10.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/text description control/Salle/male_style3.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-P/male.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle/male_style3.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-L/male_style3.wav" controls=""
               preload=""></audio>
           </td>
         </tr>
         <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/F-sad_0015_001063.wav" controls=""
+          <td style="text-align: left" colspan=6>Text description: With a slow speaking speed and a low-pitched voice,
+            the despondent male speaker's audio style conveys a sense of low energy.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/text description control/speaker prompt/male.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_11_F-sad_0015_001063.wav_0.wav"
+          <td style="text-align: left"><audio src="samples/text description control/PromptStyle/male_style4.wav"
               controls="" preload=""></audio>
           </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_11_F-sad_0015_001063.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/text description control/Salle/male_style4.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_11_F-sad_0015_001063.wav_0.wav"
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-P/male.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle/male_style4.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-L/male_style4.wav" controls=""
+              preload=""></audio>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left" colspan=6>Text description: A woman with an energetic, high-pitched voice speaks
+            fast.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/text description control/speaker prompt/female.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/PromptStyle/female_style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/Salle/female_style1.wav" controls=""
+              preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-P/female.wav"
+              controls="" preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle/female_style1.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-L/female_style1.wav"
               controls="" preload=""></audio>
           </td>
         </tr>
         <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/anger_309-336_0332.wav" controls=""
+          <td style="text-align: left" colspan=6>Text description: She communicated in a reserved tone, her sad speech
+            unfolding slowly and softly.</td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/text description control/speaker prompt/female.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_11_anger_309-336_0332.wav_0.wav"
+          <td style="text-align: left"><audio src="samples/text description control/PromptStyle/female_style2.wav"
               controls="" preload=""></audio>
           </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_11_anger_309-336_0332.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/text description control/Salle/female_style2.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_11_anger_309-336_0332.wav_0.wav"
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-P/female.wav"
+              controls="" preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle/female_style2.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-L/female_style2.wav"
               controls="" preload=""></audio>
           </td>
         </tr>
         <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/sleepiness_477-504_0479.wav" controls=""
+          <td style="text-align: left" colspan=6>Text description: With a low-pitched tone, the female speaker's fast
+            speech emanates vibrant energy.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/text description control/speaker prompt/female.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_gst/norm_denoised_11_sleepiness_477-504_0479.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/text description control/PromptStyle/female_style3.wav"
+              controls="" preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/Salle/female_style3.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_11_sleepiness_477-504_0479.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-P/female.wav"
+              controls="" preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle/female_style3.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-L/female_style3.wav"
+              controls="" preload=""></audio>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left" colspan=6>Text description: With a slow speaking speed and a low-pitched voice,
+            the despondent female speaker's audio style conveys a sense of low energy.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: left"><audio src="samples/text description control/speaker prompt/female.wav" controls=""
               preload=""></audio>
           </td>
-          <td style="text-align: left"><audio
-              src="samples/propose_zsvc/norm_denoised_11_sleepiness_477-504_0479.wav_0.wav" controls=""
+          <td style="text-align: left"><audio src="samples/text description control/PromptStyle/female_style4.wav"
+              controls="" preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/Salle/female_style4.wav" controls=""
               preload=""></audio>
+          </td>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-P/female.wav"
+              controls="" preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle/female_style4.wav" controls=""
+              preload=""></audio>
+          <td style="text-align: left"><audio src="samples/text description control/UniStyle-L/female_style4.wav"
+              controls="" preload=""></audio>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <p><b>Part 3. Source speech</b><audio src="samples/source speech/norm_denoised_40.wav" controls=""
-        preload=""></audio></p>
-    <table>
-      <thead>
-        <tr>
-          <th style="text-align: center"><strong>Style prompt</strong></th>
-          <th style="text-align: center"><strong>LGVC</strong></th>
-          <th style="text-align: center"><strong>StyleVC</strong></th>
-          <th style="text-align: center"><strong>ZSVC</strong></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/0_0_6.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_40_0_0_6.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_40_0_0_6.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_40_0_0_6.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/2_2_42.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_40_2_2_42.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_40_2_2_42.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_40_2_2_42.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/8_0_10.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_40_8_0_10.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_40_8_0_10.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_40_8_0_10.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/F-sad_0015_001063.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_40_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_40_F-sad_0015_001063.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_40_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/anger_309-336_0332.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_40_anger_309-336_0332.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_40_anger_309-336_0332.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_40_anger_309-336_0332.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/sleepiness_477-504_0479.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_gst/norm_denoised_40_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_40_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/propose_zsvc/norm_denoised_40_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-      </tbody>
-    </table>
-    <p><b>Part 4. Source speech</b><audio src="samples/source speech/norm_denoised_30.wav" controls=""
-        preload=""></audio></p>
-    <table>
-      <thead>
-        <tr>
-          <th style="text-align: center"><strong>Style prompt</strong></th>
-          <th style="text-align: center"><strong>LGVC</strong></th>
-          <th style="text-align: center"><strong>StyleVC</strong></th>
-          <th style="text-align: center"><strong>ZSVC</strong></th>
-        </tr>
-      </thead>
-      <tbody>
-        <td style="text-align: left"><audio src="samples/prompt speech/0_0_6.wav" controls="" preload=""></audio>
-        </td>
-        <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_30_0_0_6.wav_0.wav" controls=""
-            preload=""></audio>
-        </td>
-        <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_30_0_0_6.wav_0.wav" controls=""
-            preload=""></audio>
-        </td>
-        <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_30_0_0_6.wav_0.wav" controls=""
-            preload=""></audio>
-        </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/2_2_42.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_30_2_2_42.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_30_2_2_42.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_30_2_2_42.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/8_0_10.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_30_8_0_10.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_30_8_0_10.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_30_8_0_10.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/F-sad_0015_001063.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_30_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_30_F-sad_0015_001063.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_30_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/anger_309-336_0332.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_30_anger_309-336_0332.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_30_anger_309-336_0332.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_30_anger_309-336_0332.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/sleepiness_477-504_0479.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_gst/norm_denoised_30_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_30_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/propose_zsvc/norm_denoised_30_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
+    <h2>5. Discussion - attribute control<a name="synthesis3"></a></h2>
+    <h3>We evaluate the effectiveness of UniStyle-L from the perspective of attribute control. As we can hear, the
+      gender control does not work well. This discrepancy can be attributed to the fact that
+      gender is highly correlated with speaker timbre, which is primarily determined by the acoustic prompt rather than
+      the style prompt. In the context of zero-shot TTS, where
+      the synthetic speaker timbre aligns closely with that of the acoustic prompt, such a phenomenon is expected and
+      reasonable.</h3>
 
-      </tbody>
-    </table>
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align: center"><strong>Attribute</strong></th>
+            <th style="text-align: center"><strong>Speaker prompt</strong></th>
+            <th style="text-align: center"><strong>Style prompt</strong></th>
+            <th style="text-align: center"><strong>UniStyle-L</strong></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align: center; word-break: keep-all; white-space: nowrap;" rowspan=5>Gender</td>
+            <td style="text-align: left" colspan=3>Text: Downs are sitting by the door.</td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="2"><audio src="samples/attribute control/speaker prompt/male.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">A man talks</td>
+            <td style="text-align: left"><audio src="samples/attribute control/gender/male_man.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A woman talks</td>
+            <td style="text-align: left"><audio src="samples/attribute control/gender/male_woman.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="2"><audio src="samples/attribute control/speaker prompt/female.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">A man talks</td>
+            <td style="text-align: left"><audio src="samples/attribute control/gender/female_man.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A woman talks</td>
+            <td style="text-align: left"><audio src="samples/attribute control/gender/female_woman.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          
+          <tr>
+            <td style="text-align: center; word-break: keep-all; white-space: nowrap;" rowspan=7>Speaking speed</td>
+            <td style="text-align: left" colspan=3>Text: And yesterday things went on just as usual.</td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="3"><audio src="samples/attribute control/speaker prompt/male.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">A speaker talks with a slow rate.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/speaking speed/male_low.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a standard rate.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/speaking speed/male_normal.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a fast rate.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/speaking speed/male_high.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="3"><audio src="samples/attribute control/speaker prompt/female.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">A speaker talks with a slow rate.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/speaking speed/female_low.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a standard rate.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/speaking speed/female_normal.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a fast rate.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/speaking speed/female_high.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
 
-    <p><b>Part 5. Source speech</b><audio src="samples/source speech/norm_denoised_60.wav" controls=""
-        preload=""></audio></p>
-    <table>
-      <thead>
-        <tr>
-          <th style="text-align: center"><strong>Style prompt</strong></th>
-          <th style="text-align: center"><strong>LGVC</strong></th>
-          <th style="text-align: center"><strong>StyleVC</strong></th>
-          <th style="text-align: center"><strong>ZSVC</strong></th>
-        </tr>
-      </thead>
-      <tbody>
-        <td style="text-align: left"><audio src="samples/prompt speech/0_0_6.wav" controls="" preload=""></audio>
-        </td>
-        <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_60_0_0_6.wav_0.wav" controls=""
-            preload=""></audio>
-        </td>
-        <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_60_0_0_6.wav_0.wav" controls=""
-            preload=""></audio>
-        </td>
-        <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_60_0_0_6.wav_0.wav" controls=""
-            preload=""></audio>
-        </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/2_2_42.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_60_2_2_42.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_60_2_2_42.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_60_2_2_42.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/8_0_10.wav" controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_60_8_0_10.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_stylevc/norm_denoised_60_8_0_10.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_60_8_0_10.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/F-sad_0015_001063.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_60_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_60_F-sad_0015_001063.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_60_F-sad_0015_001063.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/anger_309-336_0332.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/baseline_gst/norm_denoised_60_anger_309-336_0332.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_60_anger_309-336_0332.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio src="samples/propose_zsvc/norm_denoised_60_anger_309-336_0332.wav_0.wav"
-              controls="" preload=""></audio>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: left"><audio src="samples/prompt speech/sleepiness_477-504_0479.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_gst/norm_denoised_60_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/baseline_stylevc/norm_denoised_60_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-          <td style="text-align: left"><audio
-              src="samples/propose_zsvc/norm_denoised_60_sleepiness_477-504_0479.wav_0.wav" controls=""
-              preload=""></audio>
-          </td>
-        </tr>
-      </tbody>
-    </table> -->
+          <tr>
+            <td style="text-align: center; word-break: keep-all; white-space: nowrap;" rowspan=7>Pitch</td>
+            <td style="text-align: left" colspan=3>Text: Receiving this unexpected good news, I can hardly believe it.</td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="3"><audio src="samples/attribute control/speaker prompt/male.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">A speaker talks with a low pitch.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/pitch/male_low.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a standard pitch.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/pitch/male_normal.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a high pitch.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/pitch/male_high.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="3"><audio src="samples/attribute control/speaker prompt/female.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">A speaker talks with a low pitch.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/pitch/female_low.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a standard pitch.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/pitch/female_normal.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a high pitch.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/pitch/female_high.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
 
-    <!-- <p><b>Short summary:</b> When the target neutral speaker is male, the FS2-GST and FS2-VAE cannot produce correct
-      timbre, although the genereted speech is emotional. Besides, FS2-BN sometimes also cannot generate male voice. The
-      proposed model could successfully maintain the target timbre when generating emotional speech.</p> -->
+          <tr>
+            <td style="text-align: center; word-break: keep-all; white-space: nowrap;" rowspan=7>Energy</td>
+            <td style="text-align: left" colspan=3>Text: Losing my beloved pet feels like my heart is being torn apart.</td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="3"><audio src="samples/attribute control/speaker prompt/male.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">Lack of energy, A speaker talks.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/energy/male_low.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a normal level of energy.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/energy/male_normal.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">Full of energy, A speaker talks.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/energy/male_high.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="3"><audio src="samples/attribute control/speaker prompt/female.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">Lack of energy, A speaker talks.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/energy/female_low.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a normal level of energy.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/energy/female_normal.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">Full of energy, A speaker talks.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/energy/female_high.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
 
-
-    <!-- <p><b>Short summary:</b> The results indicate the effectiveness of our proposed method can successfully transfer the
-      source emotion to the target speaker while maintaining the target speaker's timbre.</p> -->
-
+          <tr>
+            <td style="text-align: center; word-break: keep-all; white-space: nowrap;" rowspan=9>Emotion</td>
+            <td style="text-align: left" colspan=3>Text: I am very busy, Cornelia, and Colonel Bethel is waiting; I will talk to you at dinner time.</td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="4"><audio src="samples/attribute control/speaker prompt/male.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">A enraged speaker talks.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/emotion/male_angry.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with terrified tone.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/emotion/male_fear.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a pleasing voice.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/emotion/male_happy.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a sorrowful voice.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/emotion/male_sad.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left" rowspan="4"><audio src="samples/attribute control/speaker prompt/female.wav" controls="" preload=""></audio>
+            </td>
+            <td style="text-align: left">A enraged speaker talks.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/emotion/female_angry.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with terrified tone.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/emotion/female_fear.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a pleasing voice.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/emotion/female_happy.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left">A speaker talks with a sorrowful voice.</td>
+            <td style="text-align: left"><audio src="samples/attribute control/emotion/female_sad.wav" controls="" preload=""></audio>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     <br><br>
 
 
